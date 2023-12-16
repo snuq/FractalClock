@@ -75,6 +75,13 @@ RelativeLayout:
                     min: 0.5
                     max: 5
                 SettingLabel:
+                    text: "Clock Hand Overlay Scale: " + str(round(fractalclock.hand_overscale, 3))
+                SettingSlider:
+                    value: fractalclock.hand_overscale
+                    on_value: fractalclock.hand_overscale = self.value
+                    min: 0.5
+                    max: 5
+                SettingLabel:
                     text: "Clock Hand Color: "
                 ColorWheel:
                     size_hint_y: None
@@ -232,6 +239,7 @@ settings = {
     'scale': 0.5,
     'subhand_width': 1,
     'overlay_width': 1.5,
+    'hand_overscale': 1,
     'indicator_width': 1.5,
     'indicator_size': 1,
     'digital_opacity': 0,
@@ -359,6 +367,7 @@ class FractalClock(Widget):
     fractal_color = ColorProperty([1, 1, 1])
     hand_color = ColorProperty([1, 1, 1])
     hand_length = NumericProperty(1)
+    hand_overscale = NumericProperty(1)
     center_pos = ListProperty([0, 0])
     hour = NumericProperty(0)
     minute = NumericProperty(0)
@@ -442,9 +451,9 @@ class FractalClock(Widget):
         angles = (hour_per, minute_per, second_per)
         self.minute_line.update(self.center_pos, minute_per, angles, self.hand_length)
         self.second_line.update(self.center_pos, second_per, angles, self.hand_length)
-        self.hour_overlay.update(self.center_pos, hour_per, angles, self.hand_length*.5)
-        self.minute_overlay.update(self.center_pos, minute_per, angles, self.hand_length)
-        self.second_overlay.update(self.center_pos, second_per, angles, self.hand_length)
+        self.hour_overlay.update(self.center_pos, hour_per, angles, self.hand_length*.5*self.hand_overscale)
+        self.minute_overlay.update(self.center_pos, minute_per, angles, self.hand_length*self.hand_overscale)
+        self.second_overlay.update(self.center_pos, second_per, angles, self.hand_length*self.hand_overscale)
 
 
 class FractalClockApp(App):
@@ -471,6 +480,7 @@ class FractalClockApp(App):
         fc.scale = self.config.getfloat("Settings", "scale")
         fc.subhand_width = self.config.getfloat("Settings", "subhand_width")
         fc.overlay_width = self.config.getfloat("Settings", "overlay_width")
+        fc.hand_overscale = self.config.getfloat("Settings", "hand_overscale")
         self.anti_screen_burn = self.config.getboolean("Settings", "anti_screen_burn")
         self.root.ids.clockindicators.indicator_size = self.config.getfloat("Settings", "indicator_size")
         self.root.ids.clockindicators.line_width = self.config.getfloat("Settings", "indicator_width")
@@ -494,6 +504,7 @@ class FractalClockApp(App):
         self.config.set("Settings", "scale", fc.scale)
         self.config.set("Settings", "subhand_width", fc.subhand_width)
         self.config.set("Settings", "overlay_width", fc.overlay_width)
+        self.config.set("Settings", "hand_overscale", fc.hand_overscale)
         self.config.set("Settings", "anti_screen_burn", self.anti_screen_burn)
         self.config.set("Settings", "indicator_size", self.root.ids.clockindicators.indicator_size)
         self.config.set("Settings", "indicator_width", self.root.ids.clockindicators.line_width)
