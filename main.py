@@ -31,8 +31,10 @@ RelativeLayout:
     digital_size: 1
     FractalClock:
         id: fractalclock
+        pos_hint: {'x': app.anti_burn_offset, 'y': app.anti_burn_offset}
     ClockIndicators:
         id: clockindicators
+        pos_hint: {'x': app.anti_burn_offset, 'y': app.anti_burn_offset}
     Label:
         id: digitalclock
         pos: (root.digital_x * root.width) - (root.width/2), (root.digital_y * root.height) - (root.height/2)
@@ -110,13 +112,13 @@ RelativeLayout:
                     on_value: fractalclock.color_minimum = self.value
                     min: 0
                     max: 1
-                SettingLabel:
-                    text: "Fractal Line Width: " + str(round(fractalclock.subhand_width, 3))
-                SettingSlider:
-                    value: fractalclock.subhand_width
-                    on_value: fractalclock.subhand_width = self.value
-                    min: 0.5
-                    max: 5
+                #SettingLabel:
+                #    text: "Fractal Line Width: " + str(round(fractalclock.subhand_width, 3))
+                #SettingSlider:
+                #    value: fractalclock.subhand_width
+                #    on_value: fractalclock.subhand_width = self.value
+                #    min: 0.5
+                #    max: 5
                 SettingLabel:
                     text: "Fractal Color: "
                 ColorWheel:
@@ -158,8 +160,8 @@ RelativeLayout:
                 SettingLabel:
                     text: "Anti-Screen Burn: "
                 SettingToggle:
-                    state: 'down' if clockindicators.anti_screen_burn else 'normal'
-                    on_state: clockindicators.anti_screen_burn = True if self.state == 'down' else False
+                    state: 'down' if app.anti_screen_burn else 'normal'
+                    on_state: app.anti_screen_burn = True if self.state == 'down' else False
                 SettingLabel:
                     text: "Clock Indicators Color: "
                 ColorWheel:
@@ -253,24 +255,9 @@ class ClockIndicators(Widget):
     radius = NumericProperty(1)
     indicator_size = NumericProperty(1)
     indicators_color = ColorProperty([1, 1, 1])
-    anti_screen_burn = BooleanProperty(False)
-    anti_screen_burn_amount = []
-    anti_screen_burn_index = 0
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        for i in range(0, 100):
-            self.anti_screen_burn_amount.append(i / 100)
-        for i in range(100, 0, -1):
-            self.anti_screen_burn_amount.append(i / 100)
-        Clock.schedule_interval(self.update_anti_burn, 1)
-
-    def update_anti_burn(self, *_):
-        if self.anti_screen_burn:
-            self.anti_screen_burn_index += 1
-            if self.anti_screen_burn_index > 199:
-                self.anti_screen_burn_index = 0
-            self.redraw()
 
     def redraw(self):
         self.center_pos = [self.pos[0] + self.width / 2, self.pos[1] + self.height / 2]
@@ -280,12 +267,8 @@ class ClockIndicators(Widget):
         self.canvas.clear()
         self.canvas.add(Color(*self.indicators_color[:3]))
         indicator_size = 0.025 * self.indicator_size
-        if self.anti_screen_burn:
-            indicator_offset = self.indicator_size * 0.1 * self.anti_screen_burn_amount[self.anti_screen_burn_index] - indicator_size - indicator_size
-        else:
-            indicator_offset = 0
-        inner_radius = self.radius * self.scale * (1 - indicator_size + indicator_offset)
-        outer_radius = self.radius * self.scale * (1 + indicator_size + indicator_offset)
+        inner_radius = self.radius * self.scale * (1 - indicator_size)
+        outer_radius = self.radius * self.scale * (1 + indicator_size)
         for index in range(0, 12):
             radians = index / 6 * pi
             start_x = mid_x + inner_radius * sin(radians)
@@ -294,13 +277,13 @@ class ClockIndicators(Widget):
             end_y = mid_y + outer_radius * cos(radians)
             self.canvas.add(Line(width=self.line_width, points=[start_x, start_y, end_x, end_y]))
 
-    def on_anti_screen_burn(self, *_):
-        self.redraw()
-
     def on_indicators_color(self, *_):
         self.redraw()
 
     def on_indicator_size(self, *_):
+        self.redraw()
+
+    def on_pos(self, *_):
         self.redraw()
 
     def on_size(self, *_):
@@ -435,6 +418,9 @@ class FractalClock(Widget):
         self.canvas.add(self.minute_overlay)
         self.canvas.add(self.second_overlay)
 
+    def on_pos(self, *_):
+        self.center_pos = [self.pos[0] + self.width / 2, self.pos[1] + self.height / 2]
+
     def on_size(self, *_):
         self.center_pos = [self.pos[0] + self.width / 2, self.pos[1] + self.height / 2]
         self.hand_length = min(self.center_pos[0], self.center_pos[1]) * self.scale
@@ -462,6 +448,20 @@ class FractalClock(Widget):
 
 
 class FractalClockApp(App):
+    anti_screen_burn = BooleanProperty(False)
+    anti_screen_burn_amount = []
+    anti_screen_burn_index = 0
+    anti_burn_offset = NumericProperty(0)
+
+    def update_anti_burn(self, *_):
+        if self.anti_screen_burn:
+            self.anti_screen_burn_index += 1
+            if self.anti_screen_burn_index > 199:
+                self.anti_screen_burn_index = 0
+            self.anti_burn_offset = self.anti_screen_burn_amount[self.anti_screen_burn_index]
+        else:
+            self.anti_burn_offset = 0
+
     def apply_settings(self):
         fc = self.root.ids.fractalclock
         fc.angle_offset = self.config.getfloat("Settings", "angle_offset")
@@ -471,7 +471,7 @@ class FractalClockApp(App):
         fc.scale = self.config.getfloat("Settings", "scale")
         fc.subhand_width = self.config.getfloat("Settings", "subhand_width")
         fc.overlay_width = self.config.getfloat("Settings", "overlay_width")
-        self.root.ids.clockindicators.anti_screen_burn = self.config.getboolean("Settings", "anti_screen_burn")
+        self.anti_screen_burn = self.config.getboolean("Settings", "anti_screen_burn")
         self.root.ids.clockindicators.indicator_size = self.config.getfloat("Settings", "indicator_size")
         self.root.ids.clockindicators.line_width = self.config.getfloat("Settings", "indicator_width")
         self.root.ids.clockindicators.opacity = self.config.getfloat("Settings", "circle_opacity")
@@ -494,7 +494,7 @@ class FractalClockApp(App):
         self.config.set("Settings", "scale", fc.scale)
         self.config.set("Settings", "subhand_width", fc.subhand_width)
         self.config.set("Settings", "overlay_width", fc.overlay_width)
-        self.config.set("Settings", "anti_screen_burn", self.root.ids.clockindicators.anti_screen_burn)
+        self.config.set("Settings", "anti_screen_burn", self.anti_screen_burn)
         self.config.set("Settings", "indicator_size", self.root.ids.clockindicators.indicator_size)
         self.config.set("Settings", "indicator_width", self.root.ids.clockindicators.line_width)
         self.config.set("Settings", "circle_opacity", self.root.ids.clockindicators.opacity)
@@ -522,6 +522,11 @@ class FractalClockApp(App):
 
     def on_start(self):
         self.apply_settings()
+        for i in range(0, 100):
+            self.anti_screen_burn_amount.append((i - 50) / 10000)
+        for i in range(100, 0, -1):
+            self.anti_screen_burn_amount.append((i - 50) / 10000)
+        Clock.schedule_interval(self.update_anti_burn, 1)
 
 
 if __name__ == '__main__':
