@@ -61,26 +61,26 @@ RelativeLayout:
                 height: self.minimum_height
                 orientation: 'vertical'
                 SettingLabel:
-                    text: "Clock Scale: " + str(round(fractalclock.scale, 3))
+                    text: "Clock Scale: "
                 SettingSlider:
                     value: fractalclock.scale
-                    on_value: fractalclock.scale = self.value
+                    on_value: fractalclock.scale = round(self.value, 2)
                     min: 0.1
                     max: 1
                 SettingLabel:
-                    text: "Clock Hand Width: " + str(round(fractalclock.overlay_width, 3))
+                    text: "Clock Hand Width: " + str(fractalclock.overlay_width)
                 SettingSlider:
                     value: fractalclock.overlay_width
-                    on_value: fractalclock.overlay_width = self.value
+                    on_value: fractalclock.overlay_width = round(self.value, 1)
                     min: 0.5
                     max: 5
                 SettingLabel:
-                    text: "Clock Hand Overlay Scale: " + str(round(fractalclock.hand_overscale, 3))
+                    text: "Clock Hand Overlay Scale: " + str(fractalclock.hand_overscale)
                 SettingSlider:
                     value: fractalclock.hand_overscale
-                    on_value: fractalclock.hand_overscale = self.value
+                    on_value: fractalclock.hand_overscale = round(self.value, 1)
                     min: 0.5
-                    max: 5
+                    max: 4
                 SettingLabel:
                     text: "Clock Hand Color: "
                 ColorWheel:
@@ -106,26 +106,26 @@ RelativeLayout:
                     min: 0
                     max: 10
                 SettingLabel:
-                    text: "Transparency Maximum: " + str(round(fractalclock.color_value, 3))
+                    text: "Transparency Maximum: " + str(fractalclock.color_value)
                 SettingSlider:
                     value: fractalclock.color_value
-                    on_value: fractalclock.color_value = self.value
+                    on_value: fractalclock.color_value = round(self.value, 2)
                     min: 0
                     max: 1
                 SettingLabel:
-                    text: "Transparency Minimum: " + str(round(fractalclock.color_minimum, 3))
+                    text: "Transparency Minimum: " + str(fractalclock.color_minimum)
                 SettingSlider:
                     value: fractalclock.color_minimum
-                    on_value: fractalclock.color_minimum = self.value
+                    on_value: fractalclock.color_minimum = round(self.value, 2)
                     min: 0
                     max: 1
-                #SettingLabel:
-                #    text: "Fractal Line Width: " + str(round(fractalclock.subhand_width, 3))
-                #SettingSlider:
-                #    value: fractalclock.subhand_width
-                #    on_value: fractalclock.subhand_width = self.value
-                #    min: 0.5
-                #    max: 5
+                SettingLabel:
+                    text: "Fractal Line Width: " + str(fractalclock.subhand_width)
+                SettingSlider:
+                    value: fractalclock.subhand_width
+                    on_value: fractalclock.subhand_width = round(self.value, 1)
+                    min: 0.5
+                    max: 5
                 SettingLabel:
                     text: "Fractal Color: "
                 ColorWheel:
@@ -137,7 +137,7 @@ RelativeLayout:
                 SettingSpacer:
 
                 SettingLabel:
-                    text: "Clock Indicators Opacity: "
+                    text: "Clock Indicators Transparency: "
                 SettingSlider:
                     value: clockindicators.opacity
                     on_value: clockindicators.opacity = self.value
@@ -151,10 +151,10 @@ RelativeLayout:
                     min: 0.1
                     max: 1
                 SettingLabel:
-                    text: "Clock Indicator Line Width: "
+                    text: "Clock Indicator Line Width: " + str(clockindicators.line_width)
                 SettingSlider:
                     value: clockindicators.line_width
-                    on_value: clockindicators.line_width = self.value
+                    on_value: clockindicators.line_width = round(self.value, 1)
                     min: 0.5
                     max: 5
                 SettingLabel:
@@ -180,24 +180,24 @@ RelativeLayout:
                 SettingSpacer:
 
                 SettingLabel:
-                    text: "Digital Clock Opacity: "
+                    text: "Digital Clock Transparency: "
                 SettingSlider:
                     value: digitalclock.opacity
                     on_value: digitalclock.opacity = self.value
                     min: 0
                     max: 1
                 SettingLabel:
-                    text: "Digital Clock X Position: "
+                    text: "Digital Clock X Position: " + str(root.digital_x)
                 SettingSlider:
                     value: root.digital_x
-                    on_value: root.digital_x = self.value
+                    on_value: root.digital_x = round(self.value, 2)
                     min: 0
                     max: 1
                 SettingLabel:
-                    text: "Digital Clock Y Position: "
+                    text: "Digital Clock Y Position: " + str(root.digital_y)
                 SettingSlider:
                     value: root.digital_y
-                    on_value: root.digital_y = self.value
+                    on_value: root.digital_y = round(self.value, 2)
                     min: 0
                     max: 1
                 SettingLabel:
