@@ -48,7 +48,7 @@ RelativeLayout:
                 size: self.size
                 pos: self.pos
         id: settingsarea
-        hidden: True
+        hidden: not app.show_settings
         size_hint_x: 0.333
         pos: (root.width - self.width) if not self.hidden else root.width, 0
         orientation: 'vertical'
@@ -56,6 +56,7 @@ RelativeLayout:
             scroll_type: ['bars', 'content']
             do_scroll_x: False
             do_scroll_y: True
+            on_scroll_move: app.start_close_settings()
             BoxLayout:
                 size_hint_y: None
                 height: self.minimum_height
@@ -68,12 +69,12 @@ RelativeLayout:
                     min: 0.1
                     max: 1
                 SettingLabel:
-                    text: "Clock Hand Width: " + str(fractalclock.overlay_width)
+                    text: "Clock Hand Width: " + str(int(fractalclock.overlay_width))
                 SettingSlider:
                     value: fractalclock.overlay_width
-                    on_value: fractalclock.overlay_width = round(self.value, 1)
-                    min: 0.5
-                    max: 5
+                    on_value: fractalclock.overlay_width = round(self.value, 0)
+                    min: 1
+                    max: 10
                 SettingLabel:
                     text: "Clock Hand Overlay Scale: " + str(fractalclock.hand_overscale)
                 SettingSlider:
@@ -120,12 +121,12 @@ RelativeLayout:
                     min: 0
                     max: 1
                 SettingLabel:
-                    text: "Fractal Line Width: " + str(fractalclock.subhand_width)
+                    text: "Fractal Line Width: " + str(int(fractalclock.subhand_width))
                 SettingSlider:
                     value: fractalclock.subhand_width
-                    on_value: fractalclock.subhand_width = round(self.value, 1)
-                    min: 0.5
-                    max: 5
+                    on_value: fractalclock.subhand_width = round(self.value, 0)
+                    min: 1
+                    max: 10
                 SettingLabel:
                     text: "Fractal Color: "
                 ColorWheel:
@@ -151,12 +152,12 @@ RelativeLayout:
                     min: 0.1
                     max: 1
                 SettingLabel:
-                    text: "Clock Indicator Line Width: " + str(clockindicators.line_width)
+                    text: "Clock Indicator Line Width: " + str(int(clockindicators.line_width))
                 SettingSlider:
                     value: clockindicators.line_width
-                    on_value: clockindicators.line_width = round(self.value, 1)
-                    min: 0.5
-                    max: 5
+                    on_value: clockindicators.line_width = round(self.value, 0)
+                    min: 1
+                    max: 10
                 SettingLabel:
                     text: "Clock Indicator Line Length: "
                 SettingSlider:
@@ -225,10 +226,13 @@ RelativeLayout:
             Button:
                 text: 'Reset'
                 on_release: app.reset_settings()
+            Button:
+                text: 'Quit'
+                on_release: app.stop()
     Button:
         opacity: 0
         pos: 0 if settingsarea.hidden else (0 - settingsarea.width), 0
-        on_release: settingsarea.hidden = not settingsarea.hidden
+        on_release: app.toggle_settings()
 """
 
 settings = {
@@ -412,6 +416,8 @@ class FractalClock(Widget):
         self.reset()
 
     def reset(self):
+        app = App.get_running_app()
+        app.start_close_settings()
         self.canvas.clear()
         color_subtract = (self.color_value - self.color_minimum) / (self.max_iteration + 1)
         self.minute_line = FractalLine(width=self.subhand_width, color=self.fractal_color[:3], color_subtract=color_subtract, angle_offset=self.angle_offset, canvas=self.canvas, iteration=1, max_iteration=self.max_iteration, color_value=self.color_value)
@@ -457,10 +463,35 @@ class FractalClock(Widget):
 
 
 class FractalClockApp(App):
+    close_settings_timer = ObjectProperty(allownone=True)
     anti_screen_burn = BooleanProperty(False)
     anti_screen_burn_amount = []
     anti_screen_burn_index = 0
     anti_burn_offset = NumericProperty(0)
+    show_settings = BooleanProperty(False)
+
+    def toggle_settings(self):
+        if self.show_settings:
+            self.close_settings_area()
+        else:
+            self.show_settings_area()
+
+    def start_close_settings(self):
+        self.stop_close_settings()
+        self.close_settings_timer = Clock.schedule_once(self.close_settings_area, 60)
+
+    def stop_close_settings(self):
+        if self.close_settings_timer:
+            self.close_settings_timer.cancel()
+            self.close_settings_timer = None
+
+    def show_settings_area(self):
+        self.start_close_settings()
+        self.show_settings = True
+
+    def close_settings_area(self, *_):
+        self.stop_close_settings()
+        self.show_settings = False
 
     def update_anti_burn(self, *_):
         if self.anti_screen_burn:
